@@ -1,20 +1,26 @@
-import { json, redirect } from "@remix-run/node";
+import { getUserByAccessToken } from '~/api/supabase-auth.server';
+import {
+  authCookie,
+  supabaseAdmin,
+} from '~/services/supabase.server';
+
+import {
+  json,
+  redirect,
+} from '@remix-run/node';
 import {
   Form,
   useLoaderData,
   useSearchParams,
   useTransition,
-} from "@remix-run/react";
-import { SupabaseClient } from "@supabase/supabase-js";
-import authenticated from "../policies/authenticated.server";
-import { supabaseAdmin } from "../services/supabase.server";
+} from '@remix-run/react';
+
 export async function action({ request }) {
   const data = await request.formData();
   const id = data.get("id");
   const income = data.get("income");
   const user_id = data.get("user_id");
   const url = new URL(request.url);
-  const searchParams = url.searchParams;
   const month = data.get("month");
   const year = data.get("year");
   console.log(`year=${year}`);
@@ -49,15 +55,11 @@ export async function loader({ request }) {
     );
   }
   //get user id
-  const userData = await authenticated(
-    request,
-    (user) => {
-      return user.user_id;
-    },
-    () => {
-      console.log("failed");
-      return redirect("/login");
-    }
+  const authSession = await authCookie.getSession(
+    request.headers.get("Cookie"),
+  );
+  const { user, error: getUserError } = await getUserByAccessToken(
+    authSession.get("access_token")
   );
   const { data, error } = await supabaseAdmin
     .from("budgets")
@@ -65,7 +67,7 @@ export async function loader({ request }) {
     .match({ month, year });
 
   if (data.length === 0) {
-    return json({ id: -1, month, year, income: 0, user_id: userData });
+    return json({ id: -1, month, year, income: 0, user_id: user.user_id });
   } else {
     return json(data[0]);
   }

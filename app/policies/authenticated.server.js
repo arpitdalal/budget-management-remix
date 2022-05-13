@@ -1,12 +1,14 @@
-import { redirect } from "@remix-run/node";
 import {
   getUserByAccessToken,
   hasActiveAuthSession,
   refreshUserToken,
   setAuthSession,
-} from "~/api/supabase-auth.server";
-import { authCookie } from "~/services/supabase.server";
-import { supabaseAdmin } from "../services/supabase.server";
+} from '~/api/supabase-auth.server';
+import { authCookie } from '~/services/supabase.server';
+
+import { redirect } from '@remix-run/node';
+
+import { supabaseAdmin } from '../services/supabase.server';
 
 export default async function authenticated(
   request,
